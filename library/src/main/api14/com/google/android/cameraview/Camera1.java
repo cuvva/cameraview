@@ -274,14 +274,17 @@ class Camera1 extends CameraViewImpl {
      * This rewrites {@link #mCameraId} and {@link #mCameraInfo}.
      */
     private void chooseCamera() {
+        // On some phones one of the cameras may be missing, so instead of crashing just return
+        // the last camera from the list. For example, for the crappy Vodafone VFD 200 that lacks
+        // the front camera the back one will always be used.
+        mCameraId = INVALID_CAMERA_ID;
         for (int i = 0, count = Camera.getNumberOfCameras(); i < count; i++) {
             Camera.getCameraInfo(i, mCameraInfo);
+            mCameraId = i;
             if (mCameraInfo.facing == mFacing) {
-                mCameraId = i;
                 return;
             }
         }
-        mCameraId = INVALID_CAMERA_ID;
     }
 
     private void openCamera() {

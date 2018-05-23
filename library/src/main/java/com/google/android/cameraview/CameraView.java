@@ -111,8 +111,11 @@ public class CameraView extends FrameLayout {
         //     mImpl = new Camera2Api23(mCallbacks, preview, context);
         // }
 
-        mImpl = new Camera1(mCallbacks, preview);
-
+        if (Build.VERSION.SDK_INT < 23) {
+            mImpl = new Camera1(mCallbacks, preview);
+        } else {
+            mImpl = new Camera2Api23(mCallbacks, preview, context);
+        }
 
         // Attributes
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CameraView, defStyleAttr,

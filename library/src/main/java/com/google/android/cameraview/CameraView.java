@@ -95,27 +95,9 @@ public class CameraView extends FrameLayout {
             return;
         }
         // Internal setup
-        final PreviewImpl preview = createPreviewImpl(context);
         mCallbacks = new CallbackBridge();
 
-
-        // Camera2 is problematic even on some phones that support API 21+, therefore we currently
-        // use Camera1 for everything, because it just seems to work on all hardware. Particularly
-        // problematic was the front camera on Sony Xperia compact series phones. -- H.M.
-        //
-        // if (Build.VERSION.SDK_INT < 21) {
-        //     mImpl = new Camera1(mCallbacks, preview);
-        // } else if (Build.VERSION.SDK_INT < 23) {
-        //     mImpl = new Camera2(mCallbacks, preview, context);
-        // } else {
-        //     mImpl = new Camera2Api23(mCallbacks, preview, context);
-        // }
-
-        if (Build.VERSION.SDK_INT < 23) {
-            mImpl = new Camera1(mCallbacks, preview);
-        } else {
-            mImpl = new Camera2Api23(mCallbacks, preview, context);
-        }
+        getImpl(context);
 
         // Attributes
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CameraView, defStyleAttr,
@@ -140,14 +122,31 @@ public class CameraView extends FrameLayout {
         };
     }
 
+    private void getImpl(Context context) {
+        // Camera2 is problematic even on some phones that support API 21+, therefore we currently
+        // use Camera1 for everything, because it just seems to work on all hardware. Particularly
+        // problematic was the front camera on Sony Xperia compact series phones. -- H.M.
+        //
+        // if (Build.VERSION.SDK_INT < 21) {
+        //     mImpl = new Camera1(mCallbacks, preview);
+        // } else if (Build.VERSION.SDK_INT < 23) {
+        //     mImpl = new Camera2(mCallbacks, preview, context);
+        // } else {
+        //     mImpl = new Camera2Api23(mCallbacks, preview, context);
+        // }
+
+        final PreviewImpl preview = createPreviewImpl(context);
+//        if (Build.VERSION.SDK_INT < 23) {
+        mImpl = new Camera1(mCallbacks, preview);
+//        } else {
+//            mImpl = new Camera2Api23(mCallbacks, preview, context);
+//        }
+
+    }
+
     @NonNull
     private PreviewImpl createPreviewImpl(Context context) {
-        PreviewImpl preview;
-        if (Build.VERSION.SDK_INT < 14) {
-            preview = new SurfaceViewPreview(context, this);
-        } else {
-            preview = new TextureViewPreview(context, this);
-        }
+        PreviewImpl preview = new TextureViewPreview(context, this);
         return preview;
     }
 
@@ -259,8 +258,7 @@ public class CameraView extends FrameLayout {
         if (!mImpl.start()) {
             //store the state ,and restore this state after fall back o Camera1
             Parcelable state=onSaveInstanceState();
-            // Camera2 uses legacy hardware layer; fall back to Camera1
-            mImpl = new Camera1(mCallbacks, createPreviewImpl(getContext()));
+            getImpl(getContext());
             onRestoreInstanceState(state);
             mImpl.start();
         }
